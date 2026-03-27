@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DEPT Big Mac Per-Diem Calculator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="brand-bar" aria-label="DEPT branding">
+        <img
+          class="brand-logo"
+          src="./assets/images/dept-logo-black-cropped.png"
+          alt="DEPT"
+        />
+        <p class="brand-kicker">Travel meal per-diem calculator</p>
+      </header>
+
+      <main class="app-grid">
+        <section class="hero">
+          <p class="eyebrow">Global Big Mac Index</p>
+          <h1>Estimate meal budgets with one destination lookup.</h1>
+          <p class="hero-copy">
+            Pick where someone is traveling and this tool converts the local Big Mac price into
+            DEPT's reimbursement ranges for breakfast, lunch, and dinner.
+          </p>
+
+          <div class="policy-block" aria-label="Meal reimbursement policy">
+            <div class="policy-row">
+              <span class="policy-label">Breakfast</span>
+              <span>3x to 4x the local Big Mac</span>
+            </div>
+            <div class="policy-row">
+              <span class="policy-label">Lunch</span>
+              <span>4x to 6x the local Big Mac</span>
+            </div>
+            <div class="policy-row">
+              <span class="policy-label">Dinner</span>
+              <span>6x to 8x the local Big Mac</span>
+            </div>
+          </div>
+
+          <p class="hero-caption">
+            City selection helps match a traveler to the right country dataset. Pricing itself is
+            country-level.
+          </p>
+        </section>
+
+        <section class="control-panel" aria-label="Trip destination selector">
+          <div class="panel-heading">
+            <p class="section-tag">Destination</p>
+            <h2>Choose where the trip happens.</h2>
+            <p>
+              The Economist publishes the Big Mac Index by country. This app pairs each country
+              with common destination cities for faster lookup.
+            </p>
+          </div>
+
+          <form class="selector-grid">
+            <label class="field">
+              <span>Country</span>
+              <select id="country-select" name="country"></select>
+            </label>
+
+            <label class="field">
+              <span>City</span>
+              <select id="city-select" name="city"></select>
+            </label>
+          </form>
+
+          <section class="summary-card" id="summary-card" aria-live="polite">
+            <p class="summary-label">Matched Big Mac price</p>
+            <div class="summary-topline">
+              <h3 id="destination-label">Select a destination</h3>
+              <div class="summary-price-group">
+                <p class="summary-price" id="local-price">-</p>
+                <p class="summary-subprice" id="usd-price">-</p>
+              </div>
+            </div>
+            <p class="summary-meta" id="source-meta"></p>
+          </section>
+        </section>
+
+        <section class="results-panel" aria-label="Per-diem ranges">
+          <div class="results-header">
+            <p class="section-tag">Allowances</p>
+            <h2>Approved meal ranges</h2>
+          </div>
+
+          <div class="result-grid" id="meal-cards"></div>
+
+          <section class="daily-total">
+            <div>
+              <p class="daily-total-label">Full-day range</p>
+              <h2 id="daily-total-local">-</h2>
+            </div>
+            <p id="daily-total-usd">-</p>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
