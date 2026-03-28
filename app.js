@@ -5,7 +5,7 @@ const MEALS = [
   { id: "lunch", label: "Lunch", multiplierText: "4x-6x Big Mac", min: 4, max: 6 },
   { id: "dinner", label: "Dinner", multiplierText: "6x-8x Big Mac", min: 6, max: 8 }
 ];
-const GITHUB_DATA_URL = "https://raw.githubusercontent.com/DavidRyan/big-mac-index/main/data.js";
+const ECONOMIST_CSV_URL = "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-raw-index.csv";
 
 const countrySelect = document.querySelector("#country-select");
 const citySelect = document.querySelector("#city-select");
@@ -17,17 +17,9 @@ const mealCards = document.querySelector("#meal-cards");
 const dailyTotalLocal = document.querySelector("#daily-total-local");
 const dailyTotalUsd = document.querySelector("#daily-total-usd");
 
-let activeLocations = BIG_MAC_LOCATIONS.map((location) => ({
-  ...location,
-  cities: [...location.cities]
-}));
-let locationByIso = buildLocationMap(activeLocations);
-let sourceState = {
-  mode: "loading",
-  loadedAt: null,
-  sourceDate: BIG_MAC_SOURCE_DATE,
-  sourceLabel: BIG_MAC_SOURCE_LABEL
-};
+let activeLocations = [];
+let locationByIso = new Map();
+let sourceDate = null;
 
 function buildLocationMap(locations) {
   return new Map(locations.map((location) => [location.isoA3, location]));
@@ -49,27 +41,28 @@ function formatDateLabel(isoDate) {
   }).format(new Date(`${isoDate}T00:00:00Z`));
 }
 
-function formatLoadedAtLabel(date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  }).format(date);
-}
+function parseEconomistCsv(text) {
+  const lines = text.trim().split("\n");
+  const headers = lines[0].split(",").map((h) => h.trim());
+  const rows = lines.slice(1).map((line) => {
+    const values = line.split(",");
+    return Object.fromEntries(headers.map((h, i) => [h, values[i]?.trim() ?? ""]));
+  });
 
-function parseGithubDataModule(text) {
-  const dateMatch = text.match(/export const BIG_MAC_SOURCE_DATE = "([^"]+)"/);
-  const labelMatch = text.match(/export const BIG_MAC_SOURCE_LABEL = "([^"]+)"/);
-  const locationsMatch = text.match(/export const BIG_MAC_LOCATIONS = (\[[\s\S]+\]);/);
-
-  if (!dateMatch || !labelMatch || !locationsMatch) {
-    throw new Error("Could not parse remote data.js");
-  }
+  const latestDate = rows.reduce((max, row) => (row.date > max ? row.date : max), "");
+  const latestRows = rows.filter((row) => row.date === latestDate);
 
   return {
-    sourceDate: dateMatch[1],
-    sourceLabel: labelMatch[1],
-    locations: JSON.parse(locationsMatch[1])
+    sourceDate: latestDate,
+    locations: latestRows
+      .map((row) => ({
+        isoA3: row.iso_a3,
+        country: row.name,
+        currencyCode: row.currency_code,
+        localPrice: parseFloat(row.local_price),
+        dollarPrice: parseFloat(row.dollar_price)
+      }))
+      .filter((loc) => loc.isoA3 && !isNaN(loc.localPrice) && !isNaN(loc.dollarPrice))
   };
 }
 
@@ -129,18 +122,6 @@ function populateCityOptions(isoA3, preferredCity) {
   citySelect.value = selectedCity;
 }
 
-function getSourceMetaText() {
-  if (sourceState.mode === "github") {
-    return `${sourceState.sourceLabel}, updated ${formatLoadedAtLabel(sourceState.loadedAt)}.`;
-  }
-
-  if (sourceState.mode === "error") {
-    return `${BIG_MAC_SOURCE_LABEL} as of ${formatDateLabel(BIG_MAC_SOURCE_DATE)}.`;
-  }
-
-  return `${BIG_MAC_SOURCE_LABEL} as of ${formatDateLabel(BIG_MAC_SOURCE_DATE)}.`;
-}
-
 function updateSummary() {
   const location = locationByIso.get(countrySelect.value);
   if (!location) {
@@ -152,7 +133,7 @@ function updateSummary() {
   destinationLabel.textContent = `${city}, ${location.country}`;
   localPrice.textContent = formatMoney(location.localPrice, location.currencyCode);
   usdPrice.textContent = `${formatMoney(location.dollarPrice, "USD")} USD`;
-  sourceMeta.textContent = getSourceMetaText();
+  sourceMeta.textContent = `The Economist Big Mac Index as of ${formatDateLabel(sourceDate)}${sourceDate === BIG_MAC_SOURCE_DATE ? " (bundled)" : ""}.`;
 
   const cards = [...mealCards.querySelectorAll(".meal-card")];
   MEALS.forEach((meal, index) => {
@@ -179,42 +160,39 @@ function updateSummary() {
     `${formatMoney(totalUsdMin, "USD")} - ${formatMoney(totalUsdMax, "USD")} USD total`;
 }
 
-async function loadGithubData() {
-  const selectedIsoA3 = countrySelect.value;
-  const selectedCity = citySelect.value;
+async function loadEconomistData() {
+  const citiesByIso = new Map(BIG_MAC_LOCATIONS.map((loc) => [loc.isoA3, loc.cities]));
+
+  console.log("[big-mac] Fetching data from", ECONOMIST_CSV_URL);
 
   try {
-    const response = await fetch(GITHUB_DATA_URL);
+    const response = await fetch(ECONOMIST_CSV_URL);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
     const text = await response.text();
-    const { sourceDate, sourceLabel, locations } = parseGithubDataModule(text);
+    const parsed = parseEconomistCsv(text);
 
-    activeLocations = locations.map((location) => ({
-      ...location,
-      cities: [...(location.cities ?? [])]
-    }));
+    activeLocations = parsed.locations
+      .map((loc) => ({ ...loc, cities: citiesByIso.get(loc.isoA3) ?? [] }))
+      .filter((loc) => loc.cities.length > 0)
+      .sort((a, b) => a.country.localeCompare(b.country));
+
     locationByIso = buildLocationMap(activeLocations);
-    sourceState = {
-      mode: "github",
-      loadedAt: new Date(),
-      sourceDate,
-      sourceLabel
-    };
-  } catch (error) {
-    sourceState = {
-      mode: "error",
-      loadedAt: null,
-      sourceDate: BIG_MAC_SOURCE_DATE,
-      sourceLabel: BIG_MAC_SOURCE_LABEL
-    };
-  }
+    sourceDate = parsed.sourceDate;
 
-  populateCountryOptions(selectedIsoA3, selectedCity);
-  updateSummary();
+    console.log(`[big-mac] Loaded ${activeLocations.length} locations (data date: ${sourceDate})`);
+  } catch (error) {
+    console.error("[big-mac] Failed to load live data, falling back to bundled dataset:", error);
+
+    activeLocations = BIG_MAC_LOCATIONS.map((loc) => ({ ...loc, cities: [...loc.cities] }));
+    locationByIso = buildLocationMap(activeLocations);
+    sourceDate = BIG_MAC_SOURCE_DATE;
+
+    console.log(`[big-mac] Using bundled data: ${BIG_MAC_SOURCE_LABEL} (data date: ${sourceDate})`);
+  }
 }
 
 countrySelect.addEventListener("change", () => {
@@ -225,6 +203,8 @@ countrySelect.addEventListener("change", () => {
 citySelect.addEventListener("change", updateSummary);
 
 renderMealCards();
-populateCountryOptions();
-updateSummary();
-loadGithubData();
+
+loadEconomistData().then(() => {
+  populateCountryOptions();
+  updateSummary();
+});
