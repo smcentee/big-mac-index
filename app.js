@@ -5,7 +5,7 @@ const MEALS = [
   { id: "lunch", label: "Lunch", multiplierText: "4x-6x Big Mac", min: 4, max: 6 },
   { id: "dinner", label: "Dinner", multiplierText: "6x-8x Big Mac", min: 6, max: 8 }
 ];
-const LIVE_SOURCE_URL = "https://worldpopulationreview.com/country-rankings/big-mac-index-by-country";
+const ECONOMIST_CSV_URL = "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-raw-index.csv";
 
 const countrySelect = document.querySelector("#country-select");
 const citySelect = document.querySelector("#city-select");
@@ -17,16 +17,9 @@ const mealCards = document.querySelector("#meal-cards");
 const dailyTotalLocal = document.querySelector("#daily-total-local");
 const dailyTotalUsd = document.querySelector("#daily-total-usd");
 
-let activeLocations = BIG_MAC_LOCATIONS.map((location) => ({
-  ...location,
-  cities: [...location.cities]
-}));
-let locationByIso = buildLocationMap(activeLocations);
-let sourceState = {
-  mode: "loading",
-  loadedAt: null,
-  matchedCount: 0
-};
+let activeLocations = [];
+let locationByIso = new Map();
+let sourceDate = null;
 
 function buildLocationMap(locations) {
   return new Map(locations.map((location) => [location.isoA3, location]));
@@ -48,69 +41,29 @@ function formatDateLabel(isoDate) {
   }).format(new Date(`${isoDate}T00:00:00Z`));
 }
 
-function formatLoadedAtLabel(date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  }).format(date);
-}
+function parseEconomistCsv(text) {
+  const lines = text.trim().split("\n");
+  const headers = lines[0].split(",").map((h) => h.trim());
+  const rows = lines.slice(1).map((line) => {
+    const values = line.split(",");
+    return Object.fromEntries(headers.map((h, i) => [h, values[i]?.trim() ?? ""]));
+  });
 
-function decodeHtmlEntities(value) {
-  const textarea = document.createElement("textarea");
-  textarea.innerHTML = value;
-  return textarea.value;
-}
+  const latestDate = rows.reduce((max, row) => (row.date > max ? row.date : max), "");
+  const latestRows = rows.filter((row) => row.date === latestDate);
 
-function reviveAstroValue(value) {
-  if (Array.isArray(value) && value.length === 2 && Number.isInteger(value[0])) {
-    const [tag, payload] = value;
-
-    if (tag === 0) {
-      return reviveAstroValue(payload);
-    }
-
-    if (tag === 1) {
-      return payload.map((entry) => reviveAstroValue(entry));
-    }
-
-    return payload;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((entry) => reviveAstroValue(entry));
-  }
-
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [key, reviveAstroValue(entry)])
-    );
-  }
-
-  return value;
-}
-
-// World Population Review ships the table rows inside an Astro island prop payload.
-function parseWorldPopulationReviewLocations(html) {
-  const astroMatch = html.match(
-    /<astro-island[^>]+component-url="[^"]*CountryRankingMapSection[^"]*"[^>]+props="([^"]+)"/s
-  );
-
-  if (!astroMatch) {
-    throw new Error("Unable to find the live data payload.");
-  }
-
-  const decodedProps = decodeHtmlEntities(astroMatch[1]);
-  const props = JSON.parse(decodedProps);
-  const rows = reviveAstroValue(props.data);
-
-  return rows
-    .filter((row) => typeof row?.cca3 === "string" && typeof row?.BigMacIndex_2025 === "number")
-    .map((row) => ({
-      isoA3: row.cca3,
-      country: row.country,
-      dollarPrice: row.BigMacIndex_2025
-    }));
+  return {
+    sourceDate: latestDate,
+    locations: latestRows
+      .map((row) => ({
+        isoA3: row.iso_a3,
+        country: row.name,
+        currencyCode: row.currency_code,
+        localPrice: parseFloat(row.local_price),
+        dollarPrice: parseFloat(row.dollar_price)
+      }))
+      .filter((loc) => loc.isoA3 && !isNaN(loc.localPrice) && !isNaN(loc.dollarPrice))
+  };
 }
 
 function buildMealCard(meal) {
@@ -169,27 +122,6 @@ function populateCityOptions(isoA3, preferredCity) {
   citySelect.value = selectedCity;
 }
 
-function getSourceMetaText() {
-  if (sourceState.mode === "live" && sourceState.loadedAt instanceof Date) {
-    return [
-      `Live USD Big Mac data scraped on load from World Population Review on ${formatLoadedAtLabel(sourceState.loadedAt)}.`,
-      "Local currency values still come from the bundled Economist dataset because the live page only publishes USD index prices."
-    ].join(" ");
-  }
-
-  if (sourceState.mode === "error") {
-    return [
-      `Live scrape unavailable right now. Using ${BIG_MAC_SOURCE_LABEL} for ${formatDateLabel(BIG_MAC_SOURCE_DATE)} instead.`,
-      "This usually happens because the source site blocks browser cross-origin reads."
-    ].join(" ");
-  }
-
-  return [
-    `Loading live USD Big Mac data from World Population Review.`,
-    `Using ${BIG_MAC_SOURCE_LABEL} for ${formatDateLabel(BIG_MAC_SOURCE_DATE)} until that finishes.`
-  ].join(" ");
-}
-
 function updateSummary() {
   const location = locationByIso.get(countrySelect.value);
   if (!location) {
@@ -201,7 +133,7 @@ function updateSummary() {
   destinationLabel.textContent = `${city}, ${location.country}`;
   localPrice.textContent = formatMoney(location.localPrice, location.currencyCode);
   usdPrice.textContent = `${formatMoney(location.dollarPrice, "USD")} USD`;
-  sourceMeta.textContent = getSourceMetaText();
+  sourceMeta.textContent = `The Economist Big Mac Index as of ${formatDateLabel(sourceDate)}${sourceDate === BIG_MAC_SOURCE_DATE ? " (bundled)" : ""}.`;
 
   const cards = [...mealCards.querySelectorAll(".meal-card")];
   MEALS.forEach((meal, index) => {
@@ -228,57 +160,39 @@ function updateSummary() {
     `${formatMoney(totalUsdMin, "USD")} - ${formatMoney(totalUsdMax, "USD")} USD total`;
 }
 
-async function loadLiveBigMacData() {
-  const selectedIsoA3 = countrySelect.value;
-  const selectedCity = citySelect.value;
+async function loadEconomistData() {
+  const citiesByIso = new Map(BIG_MAC_LOCATIONS.map((loc) => [loc.isoA3, loc.cities]));
+
+  console.log("[big-mac] Fetching data from", ECONOMIST_CSV_URL);
 
   try {
-    const response = await fetch(LIVE_SOURCE_URL, {
-      headers: {
-        Accept: "text/html"
-      }
-    });
+    const response = await fetch(ECONOMIST_CSV_URL);
 
     if (!response.ok) {
-      throw new Error(`Unexpected response ${response.status}`);
+      throw new Error(`HTTP ${response.status}`);
     }
 
-    const html = await response.text();
-    const liveLocations = parseWorldPopulationReviewLocations(html);
-    const liveByIso = new Map(liveLocations.map((location) => [location.isoA3, location]));
-    let matchedCount = 0;
+    const text = await response.text();
+    const parsed = parseEconomistCsv(text);
 
-    activeLocations = activeLocations.map((location) => {
-      const liveLocation = liveByIso.get(location.isoA3);
-
-      if (!liveLocation) {
-        return location;
-      }
-
-      matchedCount += 1;
-
-      return {
-        ...location,
-        dollarPrice: liveLocation.dollarPrice
-      };
-    });
+    activeLocations = parsed.locations
+      .map((loc) => ({ ...loc, cities: citiesByIso.get(loc.isoA3) ?? [] }))
+      .filter((loc) => loc.cities.length > 0)
+      .sort((a, b) => a.country.localeCompare(b.country));
 
     locationByIso = buildLocationMap(activeLocations);
-    sourceState = {
-      mode: "live",
-      loadedAt: new Date(),
-      matchedCount
-    };
-  } catch (error) {
-    sourceState = {
-      mode: "error",
-      loadedAt: null,
-      matchedCount: 0
-    };
-  }
+    sourceDate = parsed.sourceDate;
 
-  populateCountryOptions(selectedIsoA3, selectedCity);
-  updateSummary();
+    console.log(`[big-mac] Loaded ${activeLocations.length} locations (data date: ${sourceDate})`);
+  } catch (error) {
+    console.error("[big-mac] Failed to load live data, falling back to bundled dataset:", error);
+
+    activeLocations = BIG_MAC_LOCATIONS.map((loc) => ({ ...loc, cities: [...loc.cities] }));
+    locationByIso = buildLocationMap(activeLocations);
+    sourceDate = BIG_MAC_SOURCE_DATE;
+
+    console.log(`[big-mac] Using bundled data: ${BIG_MAC_SOURCE_LABEL} (data date: ${sourceDate})`);
+  }
 }
 
 countrySelect.addEventListener("change", () => {
@@ -289,6 +203,8 @@ countrySelect.addEventListener("change", () => {
 citySelect.addEventListener("change", updateSummary);
 
 renderMealCards();
-populateCountryOptions();
-updateSummary();
-loadLiveBigMacData();
+
+loadEconomistData().then(() => {
+  populateCountryOptions();
+  updateSummary();
+});
