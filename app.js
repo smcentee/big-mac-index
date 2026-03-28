@@ -131,22 +131,14 @@ function populateCityOptions(isoA3, preferredCity) {
 
 function getSourceMetaText() {
   if (sourceState.mode === "github") {
-    return [
-      `${sourceState.sourceLabel} loaded from GitHub (DavidRyan/big-mac-index) on ${formatLoadedAtLabel(sourceState.loadedAt)}.`,
-      `Data as of ${formatDateLabel(sourceState.sourceDate)}.`
-    ].join(" ");
+    return `${sourceState.sourceLabel}, updated ${formatLoadedAtLabel(sourceState.loadedAt)}.`;
   }
 
   if (sourceState.mode === "error") {
-    return [
-      `Could not load live data from GitHub. Using bundled ${BIG_MAC_SOURCE_LABEL} for ${formatDateLabel(BIG_MAC_SOURCE_DATE)} instead.`
-    ].join(" ");
+    return `${BIG_MAC_SOURCE_LABEL} as of ${formatDateLabel(BIG_MAC_SOURCE_DATE)}.`;
   }
 
-  return [
-    `Loading latest Big Mac data from GitHub (DavidRyan/big-mac-index).`,
-    `Using bundled ${BIG_MAC_SOURCE_LABEL} for ${formatDateLabel(BIG_MAC_SOURCE_DATE)} until that finishes.`
-  ].join(" ");
+  return `${BIG_MAC_SOURCE_LABEL} as of ${formatDateLabel(BIG_MAC_SOURCE_DATE)}.`;
 }
 
 function updateSummary() {
