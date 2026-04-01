@@ -1,4 +1,4 @@
-# DEPT Big Mac Per-Diem Calculator
+# DEPT® Big Mac Per-Diem Calculator
 
 Static web app for calculating meal reimbursement ranges from the Global Big Mac Index.
 

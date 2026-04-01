@@ -67,6 +67,21 @@ body {
   padding-top: 14px;
 }
 
+.app-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 2px 0;
+}
+
+.app-footer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .hero {
   min-height: 100%;
   padding: 24px;
