@@ -115,9 +115,7 @@ body {
   margin: 0 0 28px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 24px;
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 55%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  background: #000000;
   aspect-ratio: 5 / 4;
 }
 
@@ -125,7 +123,8 @@ body {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #000000;
 }
 
 .hero-media-caption {
