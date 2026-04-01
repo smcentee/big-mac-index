@@ -32,7 +32,7 @@ body {
 .page-shell {
   width: min(1240px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 24px 0 40px;
+  padding: 12px 0 18px;
 }
 
 .brand-bar {
@@ -40,7 +40,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  padding: 12px 0 24px;
+  padding: 8px 0 14px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -62,14 +62,14 @@ body {
 
 .app-grid {
   display: grid;
-  grid-template-columns: minmax(300px, 1.1fr) minmax(320px, 0.95fr);
-  gap: 20px;
-  padding-top: 20px;
+  grid-template-columns: minmax(320px, 1.15fr) minmax(265px, 0.82fr) minmax(265px, 0.82fr);
+  gap: 16px;
+  padding-top: 14px;
 }
 
 .hero {
   min-height: 100%;
-  padding: 32px;
+  padding: 24px;
   background: var(--ink);
   color: #ffffff;
   border-radius: 28px;
@@ -103,46 +103,29 @@ body {
 
 .hero-copy {
   max-width: 38ch;
-  margin: 22px 0 28px;
-  font-size: 1.04rem;
-  line-height: 1.55;
+  margin: 16px 0 18px;
+  font-size: 0.95rem;
+  line-height: 1.45;
   color: #d9d9d9;
 }
 
 .hero-media {
   position: relative;
   overflow: hidden;
-  margin: 0 0 28px;
+  margin: 0 0 18px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 24px;
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 55%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  aspect-ratio: 5 / 4;
+  background: #000000;
+  aspect-ratio: 16 / 10;
+  max-height: 210px;
 }
 
 .hero-video {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-
-.hero-media-caption {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  margin: 0;
-  padding: 7px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #ffffff;
-  font-size: 0.74rem;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  backdrop-filter: blur(10px);
+  object-fit: contain;
+  background: #000000;
 }
 
 .policy-block {
@@ -156,9 +139,9 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 0;
+  padding: 12px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 0.98rem;
+  font-size: 0.92rem;
 }
 
 .policy-row:first-child {
@@ -179,12 +162,13 @@ body {
 .control-panel,
 .results-panel {
   display: grid;
-  gap: 24px;
-  padding: 28px;
+  gap: 18px;
+  padding: 22px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 28px;
   box-shadow: var(--shadow);
+  align-content: start;
 }
 
 .panel-heading p,
@@ -198,7 +182,7 @@ body {
 .panel-heading,
 .results-header {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .section-tag {
@@ -211,8 +195,8 @@ body {
 
 .selector-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
 .field {
@@ -235,7 +219,7 @@ body {
 .field select {
   appearance: none;
   width: 100%;
-  padding: 16px 18px;
+  padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--surface-soft);
@@ -259,20 +243,20 @@ body {
 }
 
 .summary-card {
-  padding: 22px 22px 20px;
+  padding: 18px;
 }
 
 .summary-topline {
   display: flex;
   justify-content: space-between;
-  gap: 18px;
+  gap: 12px;
   align-items: start;
-  margin-top: 10px;
-  margin-bottom: 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
 }
 
 .summary-topline h3 {
-  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
 }
 
 .summary-price-group {
@@ -281,7 +265,7 @@ body {
 
 .summary-price {
   margin: 0;
-  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  font-size: clamp(1.1rem, 1.8vw, 1.45rem);
   font-weight: 700;
   letter-spacing: -0.04em;
   color: var(--ink);
@@ -294,14 +278,14 @@ body {
 
 .result-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .meal-card {
   display: grid;
-  gap: 14px;
-  padding: 20px;
+  gap: 10px;
+  padding: 16px;
   transform: translateY(10px);
   opacity: 0;
   animation: rise-in 500ms ease forwards;
@@ -324,17 +308,25 @@ body {
 
 .meal-card h3 {
   margin: 0;
-  font-size: 1.26rem;
+  font-size: 1.02rem;
   line-height: 1.02;
   letter-spacing: -0.03em;
 }
 
 .result-local {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--ink);
+}
+
+.result-usd,
+.summary-subprice,
+.summary-meta,
+.panel-heading p,
+.results-header p {
+  font-size: 0.9rem;
 }
 
 .result-usd {
@@ -346,16 +338,16 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: end;
-  gap: 24px;
-  padding: 24px;
+  gap: 14px;
+  padding: 18px;
   background: var(--ink);
   color: #ffffff;
   border-color: var(--ink);
 }
 
 .daily-total h2 {
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  margin-top: 6px;
+  font-size: clamp(1.25rem, 1.7vw, 1.65rem);
+  margin-top: 4px;
 }
 
 #daily-total-local,
@@ -382,6 +374,11 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .selector-grid,
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
   .hero h1 {
     max-width: 12ch;
   }
@@ -405,13 +402,9 @@ body {
     align-items: start;
   }
 
-  .selector-grid,
-  .result-grid {
-    grid-template-columns: 1fr;
-  }
-
   .hero-media {
     aspect-ratio: 1 / 1;
+    max-height: none;
   }
 
   .summary-topline,
