@@ -1,9 +1,9 @@
 import { BIG_MAC_LOCATIONS, BIG_MAC_SOURCE_DATE, BIG_MAC_SOURCE_LABEL } from "./data.js";
 
 const MEALS = [
-  { id: "breakfast", label: "Breakfast", multiplierText: "3 to 4 Big Macs", min: 3, max: 4 },
-  { id: "lunch", label: "Lunch", multiplierText: "4 to 6 Big Macs", min: 4, max: 6 },
-  { id: "dinner", label: "Dinner", multiplierText: "6 to 8 Big Macs", min: 6, max: 8 }
+  { id: "breakfast", label: "Breakfast", multiplierText: "3x-4x Big Mac", min: 3, max: 4 },
+  { id: "lunch", label: "Lunch", multiplierText: "4x-6x Big Mac", min: 4, max: 6 },
+  { id: "dinner", label: "Dinner", multiplierText: "6x-8x Big Mac", min: 6, max: 8 }
 ];
 const ECONOMIST_CSV_URL = "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-raw-index.csv";
 
