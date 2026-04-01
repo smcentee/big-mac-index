@@ -98,7 +98,7 @@ body {
 
 .hero h1 {
   max-width: 10ch;
-  font-size: clamp(2.8rem, 6vw, 5.4rem);
+  font-size: clamp(1.4rem, 3vw, 2.7rem);
 }
 
 .hero-copy {
