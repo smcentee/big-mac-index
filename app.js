@@ -6,6 +6,9 @@ const MEALS = [
   { id: "dinner", label: "Dinner", multiplierText: "6 to 8 Big Macs", min: 6, max: 8 }
 ];
 const ECONOMIST_CSV_URL = "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-raw-index.csv";
+const COUNTRY_NAME_OVERRIDES = {
+  GBR: "United Kingdom"
+};
 
 const countrySelect = document.querySelector("#country-select");
 const citySelect = document.querySelector("#city-select");
@@ -57,7 +60,7 @@ function parseEconomistCsv(text) {
     locations: latestRows
       .map((row) => ({
         isoA3: row.iso_a3,
-        country: row.name,
+        country: COUNTRY_NAME_OVERRIDES[row.iso_a3] ?? row.name,
         currencyCode: row.currency_code,
         localPrice: parseFloat(row.local_price),
         dollarPrice: parseFloat(row.dollar_price)
